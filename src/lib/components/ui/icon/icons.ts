@@ -1,0 +1,32 @@
+export {
+	Home01Icon as Home,
+	SearchIcon as Search,
+	DashboardSquare03Icon as Dashboard,
+	Notification01Icon as Notification,
+	Calendar03Icon as Calendar,
+	AlarmClockIcon as AlarmClock,
+	Clock01Icon as Clock,
+
+	// user actions
+	StarIcon as Star,
+	FavouriteIcon as Heart,
+	ThumbsUpIcon as ThumbsUp,
+	ThumbsDownIcon as ThumbsDown,
+	Bookmark02Icon as Bookmark,
+	Download01Icon as Download,
+	Upload01Icon as Upload,
+	CargoShipIcon as Ship,
+	Invoice01Icon as Invoice,
+	ArrowLeft01Icon as ChevronLeft,
+	ArrowRight01Icon as ChevronRight,
+	ArrowUp01Icon as ChevronUp,
+	ArrowDown01Icon as ChevronDown,
+	SidebarLeftIcon as SidebarLeft,
+	SidebarRightIcon as SidebarRight,
+	WarehouseIcon as Warehouse,
+	Tick01Icon as Check,
+	ArrowTurnBackwardIcon as Back,
+	Alert01Icon as Alert,
+	AiMagicIcon as AIMagic,
+	LaurelWreath02Icon as Brand
+} from '@hugeicons/core-free-icons';

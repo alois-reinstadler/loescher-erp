@@ -20,7 +20,26 @@ export default defineConfig(
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			"no-undef": 'off'
+			'no-undef': 'off',
+			// Allow underscore-prefixed identifiers to mark intentionally unused
+			// bindings (shadcn-svelte chart slots, ignored args, etc.).
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			]
+		}
+	},
+	{
+		// Vendored shadcn-svelte + maplibre integration components. Maplibre
+		// requires direct DOM manipulation, which is a false positive for the
+		// Svelte runtime safety rule.
+		files: ['src/lib/components/ui/**/*.{svelte,ts,js}'],
+		rules: {
+			'svelte/no-dom-manipulating': 'off'
 		}
 	},
 	{

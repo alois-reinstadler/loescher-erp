@@ -60,6 +60,7 @@ class SidebarState {
 }
 
 const SYMBOL_KEY = "scn-sidebar";
+const RIGHT_SYMBOL_KEY = "scn-sidebar-right";
 
 /**
  * Instantiates a new `SidebarState` instance and sets it in the context.
@@ -78,4 +79,12 @@ export function setSidebar(props: SidebarStateProps): SidebarState {
  */
 export function useSidebar(): SidebarState {
 	return getContext(Symbol.for(SYMBOL_KEY));
+}
+
+export function setSidebarRight(props: SidebarStateProps): SidebarState {
+	return setContext(Symbol.for(RIGHT_SYMBOL_KEY), new SidebarState(props));
+}
+
+export function useSidebarRight(): SidebarState {
+	return getContext(Symbol.for(RIGHT_SYMBOL_KEY));
 }

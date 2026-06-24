@@ -1,42 +1,50 @@
-# sv
+# Loescher ERP
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SvelteKit ERP prototype with authenticated app routes and PDF document previews/generation.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+Install dependencies and start the dev server:
 
 ```sh
-# recreate this project
-pnpm dlx sv@0.16.1 create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" playwright sveltekit-adapter="adapter:node" tailwindcss="plugins:none" drizzle="database:sqlite+sqlite:libsql" better-auth="demo:password" paraglide="languageTags:de,en+demo:no" mcp="ide:claude-code,cursor,opencode+setup:remote" experimental="versions:kit+features:async,remoteFunctions,explicitEnvironmentVariables,handleRenderingErrors" --install pnpm loescher-erp
+pnpm install
+pnpm dev
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Run type and Svelte diagnostics:
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+pnpm check
 ```
 
-## Building
-
-To create a production version of your app:
+Build the production app:
 
 ```sh
-npm run build
+pnpm build
 ```
 
-You can preview the production build with `npm run preview`.
+## PDF Generation
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Start the app, then generate PDF snapshots through Playwright:
+
+```sh
+pnpm dev
+pnpm pdf
+```
+
+Useful variants:
+
+```sh
+pnpm pdf:invoice
+pnpm pdf:brand -- alrein
+```
+
+The PDF script writes to `generated/` by default. Override the app URL or output folder with `PDF_BASE_URL` and `PDF_OUTPUT_DIR`.
+
+## Database
+
+```sh
+pnpm db:push
+pnpm db:generate
+pnpm db:migrate
+```

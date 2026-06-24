@@ -1,4 +1,4 @@
-import { useSidebar } from "./context.svelte.js";
+import { useSidebar, useSidebarRight } from "./context.svelte.js";
 import Content from "./sidebar-content.svelte";
 import Footer from "./sidebar-footer.svelte";
 import GroupAction from "./sidebar-group-action.svelte";
@@ -19,6 +19,9 @@ import MenuSub from "./sidebar-menu-sub.svelte";
 import Menu from "./sidebar-menu.svelte";
 import Provider from "./sidebar-provider.svelte";
 import Rail from "./sidebar-rail.svelte";
+import RightProvider from "./sidebar-right-provider.svelte";
+import RightRoot from "./sidebar-right.svelte";
+import RightTrigger from "./sidebar-right-trigger.svelte";
 import Separator from "./sidebar-separator.svelte";
 import Trigger from "./sidebar-trigger.svelte";
 import Root from "./sidebar.svelte";
@@ -44,6 +47,9 @@ export {
 	MenuSubItem,
 	Provider,
 	Rail,
+	RightProvider,
+	RightRoot,
+	RightTrigger,
 	Root,
 	Separator,
 	//
@@ -68,8 +74,12 @@ export {
 	MenuSubItem as SidebarMenuSubItem,
 	Provider as SidebarProvider,
 	Rail as SidebarRail,
+	RightProvider as SidebarRightProvider,
+	RightRoot as SidebarRight,
+	RightTrigger as SidebarRightTrigger,
 	Separator as SidebarSeparator,
 	Trigger as SidebarTrigger,
 	Trigger,
 	useSidebar,
+	useSidebarRight,
 };
