@@ -15,6 +15,20 @@
       "when": 1782174034337,
       "tag": "0001_wooden_ozymandias",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782418884997,
+      "tag": "0002_workable_captain_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1782434490794,
+      "tag": "0003_overrated_maestro",
+      "breakpoints": true
     }
   ]
 }
