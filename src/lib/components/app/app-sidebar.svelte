@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { Icon } from '$lib/components/ui/icon/index.js';
+	import { invalidateAll } from '$app/navigation';
+	import BuildingIcon from '@tabler/icons-svelte/icons/building';
+	import CheckIcon from '@tabler/icons-svelte/icons/check';
+	import SelectorIcon from '@tabler/icons-svelte/icons/selector';
+	import { setActiveCompany } from '$lib/app/company.remote';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import type { AppShellData } from '$lib/app/data.js';
@@ -10,24 +15,89 @@
 	import NavTools from './nav-tools.svelte';
 	import NavUser from './nav-user.svelte';
 
+	type SidebarCompany = {
+		id: string;
+		name: string;
+		legalName: string;
+		slug: string;
+	};
+
 	let {
 		shell,
+		companies,
+		activeCompany,
 		...restProps
-	}: { shell: Promise<AppShellData> } & ComponentProps<typeof Sidebar.Root> = $props();
+	}: {
+		shell: Promise<AppShellData>;
+		companies: SidebarCompany[];
+		activeCompany: SidebarCompany | null;
+	} & ComponentProps<typeof Sidebar.Root> = $props();
+
+	let switchingCompanyId = $state<string | null>(null);
+
+	async function switchCompany(companyId: string) {
+		if (companyId === activeCompany?.id || switchingCompanyId) return;
+
+		switchingCompanyId = companyId;
+
+		try {
+			const result = await setActiveCompany(companyId);
+
+			if (result.ok) {
+				await invalidateAll();
+			}
+		} finally {
+			switchingCompanyId = null;
+		}
+	}
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
-					{#snippet child({ props })}
-						<a href="/dashboard" {...props}>
-							<Icon icon="Brand" class="!size-5" aria-hidden="true" />
-							<span class="text-base font-semibold">Loescher ERP</span>
-						</a>
-					{/snippet}
-				</Sidebar.MenuButton>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Sidebar.MenuButton
+								{...props}
+								size="lg"
+								class="data-[slot=sidebar-menu-button]:!p-1.5"
+							>
+								<div
+									class="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 items-center justify-center rounded-sm"
+								>
+									<BuildingIcon aria-hidden="true" />
+								</div>
+								<div class="grid flex-1 text-left leading-tight">
+									<span class="truncate text-sm font-semibold">
+										{activeCompany?.name ?? 'Company'}
+									</span>
+									<span class="text-muted-foreground truncate text-xs">Löscher Group</span>
+								</div>
+								<SelectorIcon class="ms-auto" aria-hidden="true" />
+							</Sidebar.MenuButton>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content class="w-56" align="start">
+						<DropdownMenu.Label>Company</DropdownMenu.Label>
+						<DropdownMenu.Group>
+							{#each companies as company (company.id)}
+								<DropdownMenu.Item
+									disabled={company.id === activeCompany?.id || switchingCompanyId !== null}
+									onSelect={() => switchCompany(company.id)}
+								>
+									<span class="truncate">{company.name}</span>
+									{#if company.id === activeCompany?.id}
+										<CheckIcon class="ms-auto" aria-hidden="true" />
+									{/if}
+								</DropdownMenu.Item>
+							{:else}
+								<DropdownMenu.Item disabled>No companies</DropdownMenu.Item>
+							{/each}
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
