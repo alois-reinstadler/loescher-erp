@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { RequestEvent } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { companies } from '$lib/server/db/schema';
@@ -13,7 +13,7 @@ export async function loadCompanies(database: typeof db = db): Promise<Company[]
 	return database
 		.select()
 		.from(companies)
-		.where(sql`${companies.active} = true`)
+		.where(eq(companies.active, true))
 		.orderBy(
 			sql`case ${companies.slug} when 'loescher' then 0 when 'rideau' then 1 when 'aziza' then 2 else 99 end`,
 			companies.createdAt
@@ -37,6 +37,7 @@ export function activeCompanyCookieOptions(event: Partial<Pick<RequestEvent, 'ur
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax' as const,
-		secure: event.url?.protocol === 'https:'
+		secure: event.url?.protocol === 'https:',
+		maxAge: 60 * 60 * 24 * 30
 	};
 }

@@ -7,6 +7,12 @@ import {
 
 export const setActiveCompany = command('unchecked', async (companyId: string) => {
 	const event = getRequestEvent();
+
+	// Remote functions do NOT inherit the (app) route guard, so authenticate here.
+	if (!event.locals.user) {
+		return { ok: false };
+	}
+
 	const companies = await loadCompanies();
 	const activeCompany = companies.find((company) => company.id === companyId);
 

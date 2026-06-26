@@ -1,3 +1,4 @@
+import { mkdir } from 'node:fs/promises';
 import { test as setup, expect } from '@playwright/test';
 
 const authFile = 'tests/e2e/.auth/user.json';
@@ -13,5 +14,6 @@ setup('authenticate seeded admin', async ({ request }) => {
 	});
 
 	expect(response.ok()).toBe(true);
+	await mkdir('tests/e2e/.auth', { recursive: true });
 	await request.storageState({ path: authFile });
 });
