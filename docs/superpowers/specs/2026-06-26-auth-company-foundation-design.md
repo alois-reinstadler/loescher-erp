@@ -35,6 +35,7 @@ Rejected: Option B (3 tenants — duplicates master data); Option C (UI-only com
 ## Components
 
 ### 1. Schema additions
+
 - **Run `pnpm auth:schema`** to generate better-auth tables into `auth.schema.ts`; export them from the db barrel (`src/lib/server/db/index.ts` schema object) so the drizzle adapter resolves them.
 - **New `companies` table** (`sqliteTable`), `tenantId`-scoped:
   `id (uuid pk), tenantId (fk→tenants, cascade), name, slug, legalName, addressLines (text/json), countryCode, vatId, iban, bic, email, phone, branding (json, nullable), active (bool, default true), createdAt, updatedAt`.
@@ -43,27 +44,32 @@ Rejected: Option B (3 tenants — duplicates master data); Option C (UI-only com
 - Generate migration with `pnpm db:generate`.
 
 ### 2. Auth wiring
+
 - Create `src/lib/auth-client.ts` (better-auth svelte client).
 - Wire `login-form.svelte` email+password to `authClient.signIn.email`; show errors; redirect to `/dashboard` on success.
 - Apple/Google buttons: **leave visible but disabled** (no providers configured). [User confirmed "all ok" — keep disabled, revisit later.]
 - **Remove public registration**: `(auth)/register` route redirects to `/login`. Users created by seed; admin invite is out of scope.
 
 ### 3. Route guard
+
 - Add `src/routes/(app)/+layout.server.ts`:
   - If `!event.locals.user` → `redirect(302, '/login')`.
   - Resolve active company; return `{ user, companies, activeCompany }`.
 - `(app)/+layout.ts` keeps loading shell data (guard lives server-side where `locals` is available).
 
 ### 4. Active company (session state)
+
 - Cookie `active_company` = company id. Default = first company.
 - Server helper `resolveActiveCompany(event)` validates cookie against the company list (all 3) and falls back to default.
 - A **remote function** `setActiveCompany` sets the cookie and triggers reload. (Project convention: new forms use remote functions, not superforms.)
 
 ### 5. Company switcher UI
+
 - Replace the static "Loescher ERP" brand block in `app-sidebar.svelte` header with a company dropdown (shadcn-svelte `DropdownMenu` inside `Sidebar.MenuButton`) listing Löscher / Rideau / Aziza, showing the active one, calling `setActiveCompany` on select.
 - Login form keeps the static "Loescher ERP" wordmark.
 
 ### 6. Seed / bootstrap
+
 - New `scripts/seed.ts` + `db:seed` package script. **Idempotent.** Creates:
   - one tenant ("Löscher Group"),
   - the 3 companies,
@@ -72,6 +78,7 @@ Rejected: Option B (3 tenants — duplicates master data); Option C (UI-only com
 - Credentials from env `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` with dev defaults.
 
 ### 7. E2E auth
+
 - Replace `auth.setup.ts` no-op: POST `/api/auth/sign-in/email` with seeded creds, save `storageState` to `tests/e2e/.auth/user.json`.
 - Add a `setup` project + `chromium-authed` project (`use.storageState`) in `playwright.config.ts`; move guarded-page tests onto it.
 
@@ -88,4 +95,5 @@ Rejected: Option B (3 tenants — duplicates master data); Option C (UI-only com
 - **E2E:** unauthenticated `/dashboard` → redirect `/login`; authenticated reaches dashboard; switcher changes active company.
 
 ## Out of scope (later sub-projects)
+
 DB-backed PDF issuers, admin invite UI, per-user company restrictions, master-data CRUD, sourcing workflow, logistics.

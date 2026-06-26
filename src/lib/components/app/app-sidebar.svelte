@@ -62,7 +62,7 @@
 							<Sidebar.MenuButton
 								{...props}
 								size="lg"
-								class="data-[slot=sidebar-menu-button]:!p-1.5"
+								class="data-[slot=sidebar-menu-button]:!p-1.5 [&_*]:pointer-events-none"
 							>
 								<div
 									class="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 items-center justify-center rounded-sm"
