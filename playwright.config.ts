@@ -36,16 +36,34 @@ export default defineConfig({
 		timezoneId: 'Europe/Vienna'
 	},
 	projects: [
-		{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }
+		{ name: 'setup', testMatch: /auth\.setup\.ts/ },
+		{
+			name: 'chromium',
+			testIgnore: /auth\.setup\.ts/,
+			grepInvert: /@authed/,
+			use: { ...devices['Desktop Chrome'] }
+		},
+		{
+			name: 'chromium-authed',
+			testIgnore: /auth\.setup\.ts/,
+			dependencies: ['setup'],
+			grep: /@authed/,
+			use: {
+				...devices['Desktop Chrome'],
+				storageState: 'tests/e2e/.auth/user.json'
+			}
+		}
 		// Add firefox/webkit projects here when broader visual coverage is wanted.
 	],
 	webServer: {
-		command: `pnpm dev --port ${PORT} --host 127.0.0.1`,
+		command: `mkdir -p data && pnpm db:migrate && pnpm db:seed && pnpm dev --port ${PORT} --host 127.0.0.1`,
 		url: baseURL,
 		env: {
 			DATABASE_URL: 'file:data/e2e.db',
 			ORIGIN: baseURL,
-			BETTER_AUTH_SECRET: 'e2e-test-secret-32chars-fixed-for-ci-only'
+			BETTER_AUTH_SECRET: 'e2e-test-secret-32chars-fixed-for-ci-only',
+			SEED_ADMIN_EMAIL: 'admin@loescher.local',
+			SEED_ADMIN_PASSWORD: 'loescher-dev-admin-2026!ChangeMe'
 		},
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000
