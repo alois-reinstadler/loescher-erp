@@ -3,9 +3,12 @@
 	import { page } from '$app/state';
 	import { getBrand } from '$lib/pdf/brands.js';
 	import { purchaseOrderFixture } from '$lib/pdf/fixtures/index.js';
+	import type { PageData } from './$types';
+
+	let { data: pageData }: { data: PageData } = $props();
 
 	const brand = $derived(getBrand(page.url.searchParams.get('brand')));
-	const issuer = $derived(brand.issuer);
+	const issuer = $derived(pageData.issuer ?? brand.issuer);
 	const data = $derived(purchaseOrderFixture(issuer));
 </script>
 

@@ -4,10 +4,13 @@
 	import { getBrand } from '$lib/pdf/brands.js';
 	import { getCustomer } from '$lib/pdf/customers.js';
 	import { orderConfirmationFixture } from '$lib/pdf/fixtures/index.js';
+	import type { PageData } from './$types';
+
+	let { data: pageData }: { data: PageData } = $props();
 
 	const brand = $derived(getBrand(page.url.searchParams.get('brand')));
 	const customerEntry = $derived(getCustomer(page.url.searchParams.get('customer')));
-	const issuer = $derived(brand.issuer);
+	const issuer = $derived(pageData.issuer ?? brand.issuer);
 	const customer = $derived(customerEntry.customer);
 	const data = $derived(orderConfirmationFixture(customer, issuer));
 </script>
