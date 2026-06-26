@@ -62,6 +62,8 @@ test.describe('authenticated app routes', () => {
 
 	test('company switcher changes the active company @authed', async ({ page }) => {
 		await page.goto('/dashboard');
+		await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+		await page.waitForTimeout(300);
 		await page.getByRole('button', { name: /Löscher/ }).click();
 		await page.getByRole('menuitem', { name: /Rideau/ }).click();
 		await expect(page.getByRole('button', { name: /Rideau/ })).toBeVisible();

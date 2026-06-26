@@ -2165,4 +2165,4 @@ export const exchangeRates = sqliteTable(
 	]
 );
 
-export * from './auth.schema';
+export * from './auth.schema.ts';
