@@ -7,9 +7,10 @@ test.describe('public routes', () => {
 		await expect(page.getByText('Loescher ERP').first()).toBeVisible();
 	});
 
-	test('register page renders the create-account form', async ({ page }) => {
+	test('register page redirects to login', async ({ page }) => {
 		await page.goto('/register');
-		await expect(page).toHaveTitle(/Create account/);
+		await expect(page).toHaveURL(/\/login$/);
+		await expect(page).toHaveTitle(/Sign in/);
 	});
 
 	test('root redirects to a known entry route', async ({ page }) => {
@@ -43,5 +44,28 @@ test.describe('pdf preview routes', () => {
 		const resp = await page.goto('/pdf/purchase-order?brand=alrein');
 		expect(resp?.ok()).toBeTruthy();
 		await waitForPdfReady(page);
+	});
+});
+
+test.describe('auth guard', () => {
+	test('unauthenticated dashboard redirects to login', async ({ page }) => {
+		await page.goto('/dashboard');
+		await expect(page).toHaveURL(/\/login$/);
+	});
+});
+
+test.describe('authenticated app routes', () => {
+	test('authenticated user reaches dashboard @authed', async ({ page }) => {
+		await page.goto('/dashboard');
+		await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+	});
+
+	test('company switcher changes the active company @authed', async ({ page }) => {
+		await page.goto('/dashboard');
+		await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+		await page.waitForTimeout(300);
+		await page.getByRole('button', { name: /Löscher/ }).click();
+		await page.getByRole('menuitem', { name: /Rideau/ }).click();
+		await expect(page.getByRole('button', { name: /Rideau/ })).toBeVisible();
 	});
 });

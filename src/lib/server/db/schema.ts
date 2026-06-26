@@ -20,6 +20,40 @@ export const tenants = sqliteTable(
 	(table) => [uniqueIndex('tenants_slug_unique').on(table.slug)]
 );
 
+export const companies = sqliteTable(
+	'companies',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		slug: text('slug').notNull(),
+		legalName: text('legal_name').notNull(),
+		addressLines: text('address_lines', { mode: 'json' }).notNull(),
+		countryCode: text('country_code').notNull(),
+		vatId: text('vat_id'),
+		iban: text('iban'),
+		bic: text('bic'),
+		email: text('email'),
+		phone: text('phone'),
+		branding: text('branding', { mode: 'json' }),
+		active: integer('active', { mode: 'boolean' }).notNull().default(true),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		uniqueIndex('companies_tenant_slug_unique').on(table.tenantId, table.slug),
+		index('companies_tenant_idx').on(table.tenantId)
+	]
+);
+
 export const tenantMemberships = sqliteTable(
 	'tenant_memberships',
 	{
@@ -372,6 +406,108 @@ export const productVariantMaterials = sqliteTable(
 	]
 );
 
+export const priceLists = sqliteTable(
+	'price_lists',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		code: text('code').notNull(),
+		currency: text('currency').notNull().default('EUR'),
+		status: text('status').notNull().default('active'),
+		validFrom: text('valid_from'),
+		validUntil: text('valid_until'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		deletedAt: text('deleted_at')
+	},
+	(table) => [
+		uniqueIndex('price_lists_tenant_code_unique').on(table.tenantId, table.code),
+		index('price_lists_status_idx').on(table.tenantId, table.status)
+	]
+);
+
+export const priceListItems = sqliteTable(
+	'price_list_items',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		priceListId: text('price_list_id')
+			.notNull()
+			.references(() => priceLists.id, { onDelete: 'cascade' }),
+		variantId: text('variant_id')
+			.notNull()
+			.references(() => productVariants.id, { onDelete: 'restrict' }),
+		minQuantity: integer('min_quantity').notNull().default(1),
+		unitPriceCents: integer('unit_price_cents').notNull(),
+		validFrom: text('valid_from'),
+		validUntil: text('valid_until'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		uniqueIndex('price_list_items_list_variant_qty_unique').on(
+			table.priceListId,
+			table.variantId,
+			table.minQuantity
+		),
+		index('price_list_items_variant_idx').on(table.variantId)
+	]
+);
+
+export const customerPriceLists = sqliteTable(
+	'customer_price_lists',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		customerId: text('customer_id')
+			.notNull()
+			.references(() => customers.id, { onDelete: 'cascade' }),
+		priceListId: text('price_list_id')
+			.notNull()
+			.references(() => priceLists.id, { onDelete: 'cascade' }),
+		priority: integer('priority').notNull().default(0),
+		validFrom: text('valid_from'),
+		validUntil: text('valid_until'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		uniqueIndex('customer_price_lists_customer_list_unique').on(
+			table.customerId,
+			table.priceListId
+		),
+		index('customer_price_lists_customer_idx').on(table.customerId),
+		index('customer_price_lists_price_list_idx').on(table.priceListId)
+	]
+);
+
 export const supplierPhotoQuotations = sqliteTable(
 	'supplier_photo_quotations',
 	{
@@ -381,6 +517,7 @@ export const supplierPhotoQuotations = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id')
 			.notNull()
 			.references(() => suppliers.id),
@@ -447,6 +584,7 @@ export const sampleRequests = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id')
 			.notNull()
 			.references(() => suppliers.id),
@@ -511,6 +649,7 @@ export const sampleShipments = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		sampleRequestId: text('sample_request_id').references(() => sampleRequests.id),
 		direction: text('direction').notNull(),
 		carrier: text('carrier').notNull(),
@@ -604,6 +743,7 @@ export const customerOrderConfirmations = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		customerId: text('customer_id')
 			.notNull()
 			.references(() => customers.id),
@@ -671,6 +811,7 @@ export const supplierPriceNegotiations = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id')
 			.notNull()
 			.references(() => suppliers.id),
@@ -724,6 +865,7 @@ export const purchaseOrders = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id')
 			.notNull()
 			.references(() => suppliers.id),
@@ -828,6 +970,7 @@ export const supplierSalesConfirmations = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		purchaseOrderId: text('purchase_order_id')
 			.notNull()
 			.references(() => purchaseOrders.id, { onDelete: 'cascade' }),
@@ -857,6 +1000,7 @@ export const preProductionSamples = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		purchaseOrderId: text('purchase_order_id')
 			.notNull()
 			.references(() => purchaseOrders.id, { onDelete: 'cascade' }),
@@ -916,6 +1060,7 @@ export const packagingDetails = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		purchaseOrderId: text('purchase_order_id')
 			.notNull()
 			.references(() => purchaseOrders.id, { onDelete: 'cascade' }),
@@ -946,6 +1091,7 @@ export const supplierArtworks = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		purchaseOrderId: text('purchase_order_id')
 			.notNull()
 			.references(() => purchaseOrders.id, { onDelete: 'cascade' }),
@@ -974,6 +1120,7 @@ export const shippingMarks = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		purchaseOrderId: text('purchase_order_id')
 			.notNull()
 			.references(() => purchaseOrders.id, { onDelete: 'cascade' }),
@@ -1001,6 +1148,7 @@ export const importShipments = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id').references(() => suppliers.id),
 		forwarderId: text('forwarder_id').references(() => forwarders.id),
 		shipmentNumber: text('shipment_number').notNull(),
@@ -1053,6 +1201,44 @@ export const importShipmentPurchaseOrders = sqliteTable(
 	]
 );
 
+export const shipmentTrackingEvents = sqliteTable(
+	'shipment_tracking_events',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		importShipmentId: text('import_shipment_id')
+			.notNull()
+			.references(() => importShipments.id, { onDelete: 'cascade' }),
+		eventType: text('event_type').notNull(),
+		status: text('status').notNull().default('reported'),
+		location: text('location'),
+		portCode: text('port_code'),
+		eta: text('eta'),
+		etd: text('etd'),
+		occurredAt: text('occurred_at'),
+		reportedAt: text('reported_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		source: text('source'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('shipment_tracking_events_shipment_idx').on(table.importShipmentId),
+		index('shipment_tracking_events_type_idx').on(table.tenantId, table.eventType),
+		index('shipment_tracking_events_reported_idx').on(table.tenantId, table.reportedAt)
+	]
+);
+
 export const supplierInvoices = sqliteTable(
 	'supplier_invoices',
 	{
@@ -1062,6 +1248,7 @@ export const supplierInvoices = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id')
 			.notNull()
 			.references(() => suppliers.id),
@@ -1131,6 +1318,7 @@ export const tradeDocuments = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		importShipmentId: text('import_shipment_id').references(() => importShipments.id),
 		purchaseOrderId: text('purchase_order_id').references(() => purchaseOrders.id),
 		supplierInvoiceId: text('supplier_invoice_id').references(() => supplierInvoices.id),
@@ -1190,6 +1378,7 @@ export const supplierPayments = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		supplierId: text('supplier_id')
 			.notNull()
 			.references(() => suppliers.id),
@@ -1257,6 +1446,7 @@ export const goodsReceipts = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		warehouseId: text('warehouse_id')
 			.notNull()
 			.references(() => warehouses.id),
@@ -1315,6 +1505,116 @@ export const goodsReceiptItems = sqliteTable(
 	]
 );
 
+export const qualityInspections = sqliteTable(
+	'quality_inspections',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
+		inspectionNumber: text('inspection_number').notNull(),
+		type: text('type').notNull(),
+		status: text('status').notNull().default('planned'),
+		supplierId: text('supplier_id').references(() => suppliers.id),
+		purchaseOrderId: text('purchase_order_id').references(() => purchaseOrders.id),
+		importShipmentId: text('import_shipment_id').references(() => importShipments.id),
+		goodsReceiptId: text('goods_receipt_id').references(() => goodsReceipts.id),
+		warehouseId: text('warehouse_id').references(() => warehouses.id),
+		inspectedByUserId: text('inspected_by_user_id'),
+		plannedAt: text('planned_at'),
+		startedAt: text('started_at'),
+		completedAt: text('completed_at'),
+		result: text('result'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		uniqueIndex('quality_inspections_tenant_number_unique').on(
+			table.tenantId,
+			table.inspectionNumber
+		),
+		index('quality_inspections_status_idx').on(table.tenantId, table.status),
+		index('quality_inspections_po_idx').on(table.purchaseOrderId),
+		index('quality_inspections_receipt_idx').on(table.goodsReceiptId)
+	]
+);
+
+export const qualityInspectionItems = sqliteTable(
+	'quality_inspection_items',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		qualityInspectionId: text('quality_inspection_id')
+			.notNull()
+			.references(() => qualityInspections.id, { onDelete: 'cascade' }),
+		purchaseOrderItemId: text('purchase_order_item_id').references(() => purchaseOrderItems.id),
+		goodsReceiptItemId: text('goods_receipt_item_id').references(() => goodsReceiptItems.id),
+		variantId: text('variant_id')
+			.notNull()
+			.references(() => productVariants.id, { onDelete: 'restrict' }),
+		quantityInspected: integer('quantity_inspected'),
+		quantityPassed: integer('quantity_passed'),
+		quantityFailed: integer('quantity_failed'),
+		result: text('result'),
+		defectSummary: text('defect_summary'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('quality_inspection_items_inspection_idx').on(table.qualityInspectionId),
+		index('quality_inspection_items_variant_idx').on(table.variantId)
+	]
+);
+
+export const qualityInspectionChecks = sqliteTable(
+	'quality_inspection_checks',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		qualityInspectionItemId: text('quality_inspection_item_id')
+			.notNull()
+			.references(() => qualityInspectionItems.id, { onDelete: 'cascade' }),
+		checkType: text('check_type').notNull(),
+		status: text('status').notNull().default('pending'),
+		expectedValue: text('expected_value'),
+		actualValue: text('actual_value'),
+		defectQuantity: integer('defect_quantity'),
+		severity: text('severity'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('quality_inspection_checks_item_idx').on(table.qualityInspectionItemId),
+		index('quality_inspection_checks_type_idx').on(table.tenantId, table.checkType)
+	]
+);
+
 export const inventoryMovements = sqliteTable(
 	'inventory_movements',
 	{
@@ -1324,6 +1624,7 @@ export const inventoryMovements = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		warehouseId: text('warehouse_id')
 			.notNull()
 			.references(() => warehouses.id),
@@ -1355,6 +1656,7 @@ export const salesOrders = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		customerId: text('customer_id')
 			.notNull()
 			.references(() => customers.id),
@@ -1422,6 +1724,49 @@ export const salesOrderItems = sqliteTable(
 	]
 );
 
+export const stockReservations = sqliteTable(
+	'stock_reservations',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		warehouseId: text('warehouse_id')
+			.notNull()
+			.references(() => warehouses.id),
+		variantId: text('variant_id')
+			.notNull()
+			.references(() => productVariants.id, { onDelete: 'restrict' }),
+		salesOrderItemId: text('sales_order_item_id')
+			.notNull()
+			.references(() => salesOrderItems.id, { onDelete: 'cascade' }),
+		status: text('status').notNull().default('reserved'),
+		quantityReserved: integer('quantity_reserved').notNull(),
+		quantityReleased: integer('quantity_released').notNull().default(0),
+		quantityFulfilled: integer('quantity_fulfilled').notNull().default(0),
+		reservedAt: text('reserved_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		releasedAt: text('released_at'),
+		fulfilledAt: text('fulfilled_at'),
+		createdByUserId: text('created_by_user_id'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('stock_reservations_stock_idx').on(table.tenantId, table.warehouseId, table.variantId),
+		index('stock_reservations_sales_order_item_idx').on(table.salesOrderItemId),
+		index('stock_reservations_status_idx').on(table.tenantId, table.status)
+	]
+);
+
 export const deliveryNotes = sqliteTable(
 	'delivery_notes',
 	{
@@ -1431,6 +1776,7 @@ export const deliveryNotes = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		salesOrderId: text('sales_order_id')
 			.notNull()
 			.references(() => salesOrders.id),
@@ -1501,6 +1847,7 @@ export const customerInvoices = sqliteTable(
 		tenantId: text('tenant_id')
 			.notNull()
 			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
 		customerId: text('customer_id')
 			.notNull()
 			.references(() => customers.id),
@@ -1561,6 +1908,153 @@ export const customerInvoiceItems = sqliteTable(
 	(table) => [
 		index('customer_invoice_items_tenant_idx').on(table.tenantId),
 		index('customer_invoice_items_invoice_idx').on(table.customerInvoiceId)
+	]
+);
+
+export const customerReturns = sqliteTable(
+	'customer_returns',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		companyId: text('company_id').references(() => companies.id),
+		customerId: text('customer_id')
+			.notNull()
+			.references(() => customers.id),
+		customerLocationId: text('customer_location_id').references(() => customerLocations.id),
+		salesOrderId: text('sales_order_id').references(() => salesOrders.id),
+		deliveryNoteId: text('delivery_note_id').references(() => deliveryNotes.id),
+		customerInvoiceId: text('customer_invoice_id').references(() => customerInvoices.id),
+		warehouseId: text('warehouse_id').references(() => warehouses.id),
+		rmaNumber: text('rma_number').notNull(),
+		status: text('status').notNull().default('requested'),
+		reason: text('reason'),
+		requestedAt: text('requested_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		authorizedAt: text('authorized_at'),
+		receivedAt: text('received_at'),
+		closedAt: text('closed_at'),
+		refundAmountCents: integer('refund_amount_cents'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		uniqueIndex('customer_returns_tenant_rma_unique').on(table.tenantId, table.rmaNumber),
+		index('customer_returns_customer_idx').on(table.customerId),
+		index('customer_returns_status_idx').on(table.tenantId, table.status)
+	]
+);
+
+export const customerReturnItems = sqliteTable(
+	'customer_return_items',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		customerReturnId: text('customer_return_id')
+			.notNull()
+			.references(() => customerReturns.id, { onDelete: 'cascade' }),
+		salesOrderItemId: text('sales_order_item_id').references(() => salesOrderItems.id),
+		deliveryNoteItemId: text('delivery_note_item_id').references(() => deliveryNoteItems.id),
+		customerInvoiceItemId: text('customer_invoice_item_id').references(
+			() => customerInvoiceItems.id
+		),
+		variantId: text('variant_id')
+			.notNull()
+			.references(() => productVariants.id, { onDelete: 'restrict' }),
+		quantityRequested: integer('quantity_requested').notNull(),
+		quantityReceived: integer('quantity_received').notNull().default(0),
+		quantityAccepted: integer('quantity_accepted').notNull().default(0),
+		condition: text('condition'),
+		resolution: text('resolution'),
+		reason: text('reason'),
+		notes: text('notes'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('customer_return_items_return_idx').on(table.customerReturnId),
+		index('customer_return_items_variant_idx').on(table.variantId)
+	]
+);
+
+export const tasks = sqliteTable(
+	'tasks',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		entityType: text('entity_type'),
+		entityId: text('entity_id'),
+		title: text('title').notNull(),
+		description: text('description'),
+		status: text('status').notNull().default('open'),
+		priority: text('priority').notNull().default('normal'),
+		assignedToUserId: text('assigned_to_user_id'),
+		createdByUserId: text('created_by_user_id'),
+		dueAt: text('due_at'),
+		completedAt: text('completed_at'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('tasks_entity_idx').on(table.tenantId, table.entityType, table.entityId),
+		index('tasks_assignee_idx').on(table.assignedToUserId, table.status),
+		index('tasks_status_idx').on(table.tenantId, table.status),
+		index('tasks_due_idx').on(table.tenantId, table.dueAt)
+	]
+);
+
+export const comments = sqliteTable(
+	'comments',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		tenantId: text('tenant_id')
+			.notNull()
+			.references(() => tenants.id, { onDelete: 'cascade' }),
+		entityType: text('entity_type').notNull(),
+		entityId: text('entity_id').notNull(),
+		authorUserId: text('author_user_id'),
+		body: text('body').notNull(),
+		visibility: text('visibility').notNull().default('internal'),
+		editedAt: text('edited_at'),
+		deletedAt: text('deleted_at'),
+		createdAt: text('created_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+		updatedAt: text('updated_at')
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+	},
+	(table) => [
+		index('comments_entity_idx').on(table.tenantId, table.entityType, table.entityId),
+		index('comments_author_idx').on(table.authorUserId),
+		index('comments_created_idx').on(table.tenantId, table.createdAt)
 	]
 );
 
@@ -1671,4 +2165,4 @@ export const exchangeRates = sqliteTable(
 	]
 );
 
-export * from './auth.schema';
+export * from './auth.schema.ts';

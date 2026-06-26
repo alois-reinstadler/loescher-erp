@@ -24,6 +24,7 @@ vite.config.ts.timestamp-*
 # Playwright
 test-results
 playwright-report
+tests/e2e/.auth
 /coverage
 # Paraglide
 src/lib/paraglide

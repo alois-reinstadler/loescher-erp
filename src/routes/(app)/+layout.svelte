@@ -13,7 +13,12 @@
 <Sidebar.Provider
 	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 >
-	<AppSidebar shell={data.shell.data} variant="inset" />
+	<AppSidebar
+		shell={data.shell.data}
+		companies={data.companies}
+		activeCompany={data.activeCompany}
+		variant="inset"
+	/>
 	<Sidebar.Inset>
 		<SiteHeader shell={data.shell.data} />
 		<div class="flex flex-1 flex-col">

@@ -29,22 +29,16 @@ test.describe('visual regression', () => {
 		await expect(page).toHaveScreenshot('login.png');
 	});
 
-	test('register page', async ({ page }) => {
-		await page.goto('/register');
-		await expect(page.getByText('Loescher ERP').first()).toBeVisible();
-		await expect(page).toHaveScreenshot('register.png');
-	});
-
 	test('invoice PDF preview', async ({ page }) => {
 		await page.goto('/pdf/invoice?brand=alrein&customer=mahler');
 		await waitForPdfReady(page);
 		await expect(page).toHaveScreenshot('pdf-invoice.png', { fullPage: true });
 	});
+});
 
-	test('dashboard', async ({ page }) => {
+test.describe('authenticated visual regression', () => {
+	test('dashboard @authed', async ({ page }) => {
 		test.setTimeout(60_000);
-		// The dashboard is currently served without an auth guard; once auth is
-		// enforced, wire tests/e2e/auth.setup.ts and use a storageState project.
 		await page.goto('/dashboard');
 		await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 		// The page body is rendered inside an {#await} block; wait for the metric
