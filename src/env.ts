@@ -28,6 +28,7 @@ export const variables = defineEnvVars({
 		description: 'Admin password used by pnpm db:seed.'
 	},
 	OPENAI_API_KEY: {
+		schema: optionalString,
 		description: 'OpenAI API key used for AI image generation (DALL-E).'
 	}
 });
