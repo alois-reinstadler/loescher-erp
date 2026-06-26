@@ -9,6 +9,12 @@ export const variables = defineEnvVars({
 		description:
 			'Secret used to sign tokens. For production use 32 characters generated with high entropy. See [Better Auth installation](https://www.better-auth.com/docs/installation).'
 	},
+	SEED_ADMIN_EMAIL: {
+		description: 'Admin email used by pnpm db:seed.'
+	},
+	SEED_ADMIN_PASSWORD: {
+		description: 'Admin password used by pnpm db:seed.'
+	},
 	OPENAI_API_KEY: {
 		description: 'OpenAI API key used for AI image generation (DALL-E).'
 	}
